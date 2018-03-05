@@ -1,9 +1,9 @@
 <?php
 class Splogger{
 
-    private $instance_id = "splog_";
-    private $config;
-    private $db;
+    public $instance_id = "splog_";
+    public $config;
+    public $db;
     public $encrypt_function;
     /*
      *  It's required that any Splogger object be instanciated before sending the body 
@@ -136,8 +136,8 @@ class SploggerConfig{
 }
 
 class SploggerDatabaseInitializer{
-    private $config;
-    private $db;
+    protected $config;
+    public $db;
 
     function __construct(SploggerConfig $config){
         $this->config = $config;

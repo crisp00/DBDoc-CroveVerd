@@ -1,23 +1,25 @@
 <?php
-require_once("splogger/splogger.php");
+require_once("dbdoc/dbdoc.php");
 
-$config = new SploggerConfig();
+$config = new DbDocConfig();
 $config->db_host = "localhost";
 $config->db_user = "root";
 $config->db_pass = "";
-$config->db_database = "xx";
-$config->db_prefix = "xx";
-//$splogger = new Splogger($config, "pi_");
-$splogger = new Splogger($config, "pi_");
+$config->db_database = "dbdoc_cv";
+$config->db_prefix = "cv";
+$config->sess_prefix = "cv_";
+
+$dbdoc = new DbDoc($config);
 $page = "login";
 if(isset($_POST["login"])){
     $user = $_POST["user"];
     $pass = $_POST["pass"];
-    $splogger->login($user, $pass);
+    $dbdoc->login($user, $pass);
 }else if(isset($_GET["logout"])){
-    $splogger->logout();
+    $dbdoc->logout();
 }
-if($user = $splogger->isLoggedIn()){
+
+if($user = $dbdoc->isLoggedIn()){
     $page = "user";
     $user = $user->user;
 }
