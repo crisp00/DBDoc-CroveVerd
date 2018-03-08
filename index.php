@@ -7,7 +7,7 @@ $config->db_user = "root";
 $config->db_pass = "";
 $config->db_database = "dbdoc_cv";
 $config->db_prefix = "cv";
-$config->sess_prefix = "cv_";
+$config->sess_id = "cv_";
 
 $dbdoc = new DbDoc($config);
 $page = "login";

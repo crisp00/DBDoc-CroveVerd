@@ -9,13 +9,13 @@ class Splogger{
      *  It's required that any Splogger object be instanciated before sending the body 
      *
      */
-    function __construct(SploggerConfig $config, $instance_id){
+    function __construct(SploggerConfig $config){
         $this->encrypt_function = function($password){
             $salt = "aaoisgsgsufgb807adbga8sdng79s80ag9d7fav";
             return crypt($password, $salt);
         };
         
-        $this->instance_id = $instance_id;
+        $this->instance_id = $config->sess_id;
         $this->config = $config;
         session_start();
         $this->db = new mysqli(
@@ -129,6 +129,7 @@ class SploggerConfig{
     public $db_database;
     public $db_prefix;
     public $pass_salt;
+    public $sess_id;
     
     function __construct(){
         
@@ -137,6 +138,7 @@ class SploggerConfig{
 
 class SploggerDatabaseInitializer{
     protected $config;
+    protected $splogger;
     public $db;
 
     function __construct(SploggerConfig $config){
@@ -153,6 +155,7 @@ class SploggerDatabaseInitializer{
     function init(){
         $this->db->query("CREATE DATABASE IF NOT EXISTS " . $this->config->db_database);
         $this->db->select_db($this->config->db_database);
+        $this->splogger = new Splogger($this->config);
         
         $groups_table_query = "CREATE TABLE `".$this->config->db_prefix."_groups` (
             `ID_group` int(10) NOT NULL AUTO_INCREMENT,

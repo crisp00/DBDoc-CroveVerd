@@ -1,11 +1,13 @@
 <?php
-require_once("./splogger/splogger.php");
+$_path = dirname(__FILE__);
+$_docroot = $_SERVER['DOCUMENT_ROOT'];
+require_once($_path . "/splogger/splogger.php");
 
 
 class DbDoc extends Splogger{
 
     function __construct(DbDocConfig $config){
-        parent::__construct($config, $config->sess_prefix);
+        parent::__construct($config);
     }
 
     function getCategories($parent){
@@ -36,9 +38,9 @@ class DbDocCategory{
     public $id;
     protected $dbdoc;
 
-    function __construct(DbDoc $dbdoc, $id, $name = null, $parent = null, $path = null){
+    function __construct(DbDoc $dbdoc, $id = null, $name = null, $parent = null, $path = null){
         $this->dbdoc = $dbdoc;
-        if($name == null){
+        if($name == null && $id != null){
             $query = "SELECT * FROM ".$dbdoc->config->db_prefix."_categoria WHERE id = " . $id;
             $result = $dbdoc->db->query($query);
             if(!$result){
@@ -58,6 +60,31 @@ class DbDocCategory{
         $this->id = $id;
     }
 
+    function save(){
+        if(!($this->parent != null && $this->name != null && $this->path != null)){
+            throw new ErrorException("DbDoc Error: trying to save uncompiled category");
+        }
+        if($this->id == null){
+            mkdir($_SERVER['DOCUMENT_ROOT'] . $this->getAbsolutePath(), 0777, true);
+            $query = "INSERT INTO ". $this->dbdoc->config->db_prefix ."_categoria (nome, percorso, parent_id)
+            VALUES (\"". $this->name ."\", \"". $this->path ."\", ". $this->parent->id .")";
+            $this->dbdoc->db->query($query);
+            if($this->dbdoc->db->error)
+                echo $this->dbdoc->db->error;
+        }else{
+            $query = "UPDATE ". $this->dbdoc->config->db_prefix ."_categoria 
+            SET nome = ". $this->name . ",
+            percorso = ". $this->path . ",
+            parent_id = ". $this->parent->id.",
+            WHERE id = ". $this->id;
+            mkdir($_SERVER['DOCUMENT_ROOT'] . $this->getAbsolutePath(), 0777, true);
+        }
+    }
+
+    function getAbsolutePath(){
+        return (($this->parent != null) ? $this->parent->getAbsolutePath() : "") . $this->path;
+    }
+
     function toString() {
         return "Category {id: ". $this->id 
             .", name: ".$this->name.
@@ -66,9 +93,7 @@ class DbDocCategory{
     }
 }
 
-class DbDocConfig extends SploggerConfig{
-    public $sess_prefix;
-    
+class DbDocConfig extends SploggerConfig{    
     function __construct(){
         
     }
@@ -90,12 +115,12 @@ class DbDocDatabaseInitializer extends SploggerDatabaseInitializer{
             FOREIGN KEY `parent_id` (`parent_id`) REFERENCES `".$this->config->db_prefix."_categoria` (`id`));";
         
         $cat_fill = "INSERT INTO `".$this->config->db_prefix."_categoria` (`id`, `nome`, `percorso`, `parent_id`) VALUES
-        (1, 'root', '/cv/docs/', NULL);";
+        (1, 'root', '/cv/docs', NULL);";
         
         $doc_table = "CREATE TABLE IF NOT EXISTS `".$this->config->db_prefix."_documento` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `nome` varchar(50) NOT NULL,
-            `percorso` varchar(10) NOT NULL,
+            `percorso` varchar(50) NOT NULL,
             `cat_id` int(11) NOT NULL,
             PRIMARY KEY (`id`),
             FOREIGN KEY `cat_id` (`cat_id`) REFERENCES `".$this->config->db_prefix."_categoria` (`id`));";
@@ -112,6 +137,8 @@ class DbDocDatabaseInitializer extends SploggerDatabaseInitializer{
         if($this->db->error){
             throw new ErrorException("DbDoc: Failed to create documents table in database: " . $this->db->error);
         }
+        $this->splogger->createGroup("user");
+        $this->splogger->register("test", "test");
     }
 }
 

@@ -10,6 +10,11 @@
         foreach($cats as $cat){
             echo $cat->toString() . "<br>";
         }
+
+        $cat = new DbDocCategory($dbdoc, null, "brovia", new DbDocCategory($dbdoc, 3), "/brovia");
+        echo $cat->getAbsolutePath();
+        $cat->save();
+
     ?>
     <a href="./?logout"><button>Log out</button></a>
 </div>
